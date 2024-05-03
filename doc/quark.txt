@@ -1,0 +1,222 @@
+*quark*	Fuzzy pickers to open files, switch buffers and execute ex-commands.
+				    _        ___
+		 __ _ _  _ __ _ _ _: :__    / & \__
+		/ _` : :; / _' : '_! % /    X___/= \
+		\__. !\_._\__._:_: :_`.\   / ~ \___/
+		   :_:                 ``  \___/
+		
+		https://git.sr.ht/~adigitoleo/quark.nvim
+
+		Sure he hasn't got much of a bark
+		And sure any he has it's all beside the mark.
+
+==============================================================================
+INTRODUCTION						*quark-introduction*
+
+This plugin provides the commands |:QuarkSwitch|, |:QuarkFind| and |:QuarkRecent|
+to switch between buffers (and terminals), open files from a directory or
+re-open recently used files and buffers. Fuzzy search relies on a search
+backend (currently only `fzf(1)` is supported). The additional Lua function
+`fuzzy_cmd` may be used to set a key mapping that launches a fuzzy interface
+to |ex-command|s and |user-commands|. File/buffer/command pickers are all
+displayed in a floating window, see |api-floatwin|). The plugin requires NeoVim,
+and is know to work on versions 0.9.5+.
+
+Bug fixes and feature requests are welcome at my public inbox: >
+
+	https://lists.sr.ht/~adigitoleo/public-inbox
+
+Patches should be applicable to the `dev` branch. See |quark-bugs| for a
+list of current known issues that are most in need of attention.
+
+
+==============================================================================
+USAGE								*quark-usage*
+
+Once the plugin files are on your 'packpath', load the plugin with >
+
+	:lua require('quark')
+
+in your `init.vim` file or simply >
+
+	require('quark')
+
+in `init.lua`. Default options are applied automatically, but can be
+configured by passing a configuration table to the `setup` function, e.g. >
+
+	require('quark').setup{ window = { border = "rounded" } }
+
+Configuration options are described in |quark-config|.
+
+
+==============================================================================
+CONFIGURATION					*quark-config* *quark.setup*
+
+The following configuration options are supported for quark.
+Any omitted values will be set to their indicated defaults.
+
+Lua configuration example~
+>
+	require('quark').setup{
+		window = {
+			width = 0.8,
+			height = 0.7,
+			border = "none",
+			preview = false,
+		},
+	}
+
+------------------------------------------------------------------------------
+						*quark.setup.define_commands*
+
+This boolean option can be set to false to disable the default command
+definitions for |:QuarkSwitch|, |:QuarkFind| and |:QuarkRecent|. It is possible to
+use alternative command names by manually passing the |quark-functions| to
+|nvim_create_user_command|.
+
+------------------------------------------------------------------------------
+							*quark.setup.window*
+
+This option controls the appearance of the floating window. It is a table with
+the following keys
+
+	key~		value~		description~
+	----------------------------------------------------------------------
+	width		number		fraction of |'columns'| used for the
+					floating window width (default: `0.9`)
+	----------------------------------------------------------------------
+	height		number		fraction of |'lines'| used for the
+					floating window height (default: `0.6`)
+	----------------------------------------------------------------------
+	winblend	integer		note: not currently supported
+	----------------------------------------------------------------------
+	border		string		border style for the floating window
+					(default: `"sharp"`), see [1]
+	----------------------------------------------------------------------
+	highlight	string		name of highlight group to use for the
+					floating window (default: `NormalFloat`)
+	----------------------------------------------------------------------
+	preview		boolean		toggle file previews, using `head(1)`,
+					on linux (default: `true`)
+	----------------------------------------------------------------------
+	zindex		integer		"priority" of the floating window,
+					see |api-win_config| (default: `11`)
+
+------------------------------------------------------------------------------
+							*quark.setup.cmd_window*
+
+This option controls the appearance of the command window used by `fuzzy_cmd`.
+Options are identical to those in |quark.setup.window|, with the addition of
+`xoffset` (default: 0) and `yoffset` (default: 1) which are integer values
+that control the offset of the window relative to the editor. Default values
+for many fields are also different: >
+
+	cmd_window = {
+		width = 1,
+		height = 0.4,
+		xoffset = 0,
+		yoffset = 1, -- start one line above the status messages
+		border = "top",
+		highlight = "StatusLine",
+		zindex = 23,
+	}
+
+------------------------------------------------------------------------------
+							*quark.setup.fzf*
+
+This option controls the settings used for the `fzf(1)` command, which
+implements the fuzzy searching. This option can be used to override the
+default fzf command (set using the `FZF_DEFAULT_COMMAND` environment variable
+by default) or change the behaviour of fzf. It is a table with the following
+default values: >
+
+	fzf = {
+		default_command = nil, -- string or nil: if nil, use $FZF_DEFAULT_COMMAND
+		-- additional options passed to the fzf command for the ex-command picker
+		cmd_extra_opts = {
+			'--no-multi',
+			'--print-query',
+			'--prompt',
+			':',
+			'--color',
+			'prompt:-1',
+			'--expect',
+			';,space|!', -- expect ! requires fzf ≥ 0.51.0
+			'--layout',
+			'reverse-list'
+		},
+		-- additional options passed to the fzf command for everything else
+		extra_opts = vim.list_extend({ '--multi' },
+			system == "Linux" and
+			{ '--preview', 'case $(file {}) in *"text"*) head -200 {} ;; *) echo "Preview unavailable" ;; esac',
+			'--preview-window', vim.o.columns > 120 and 'right:60%:sharp' or 'down:60%:sharp' } or {})
+	}
+
+==============================================================================
+FUNCTIONS					*quark-functions* *quark-api*
+
+This plugin exposes a few functions via the `require("quark")` Lua namespace
+which can be used in custom command definitions or key bindings. They are
+listed in the table below.
+
+	function~		description~
+	----------------------------------------------------------------------
+	`list_filetypes()`	return a list of currently defined filetypes
+	`list_syntax()`		return a list of currently loaded syntax files
+	`fuzzy_find({*opts})`	implements `:QuarkFind`, {*opts} as per
+				|lua-guide-commands-create|
+	`fuzzy_recent()`	implements `:QuarkRecent`
+	`fuzzy_switch()`	implements `:QuarkSwitch`
+	`fuzzy_cmd()`		launches a fuzzy |ex-command| menu,
+				see |quark.setup.cmd_window|
+
+
+==============================================================================
+COMMANDS						*quark-commands*
+
+This plugin defines a few commands, unless |quark.setup.define_commands| is
+`false`. They are specified below.
+
+------------------------------------------------------------------------------
+								*:QuarkSwitch*
+
+This command opens a floating window with a menu to select a currently open
+buffer or embedded |terminal|. A query can be used to fuzzy-match the buffer
+name. Switching to the selected buffer is performed using the <Cr> (Enter)
+key.
+
+------------------------------------------------------------------------------
+								*:QuarkFind*
+
+This command opens a floating window with a menu to select one or multiple
+files from the provided directory path, or from the current directory if the
+argument is omitted. A query can be used to fuzzy-match the file name.
+SOpening the selected files is performed using the <Cr> (Enter) key.
+
+------------------------------------------------------------------------------
+								*:QuarkRecent*
+
+This command opens a floating window with a menu to select a currently open
+buffer or re-open a recent file (see |v:oldfiles|). A query can be used to
+fuzzy-match the buffer name. Switching to or opening the selected buffer is
+performed using the <Cr> (Enter) key.
+
+------------------------------------------------------------------------------
+								*:quarkLs*
+
+Shows the current mapping of floating terminal titles to buffer numbers. The
+mapping may be many-to-one if the title for a floating terminal was updated.
+In this case, using either title with `:quarkTerm -t <title>` will restore the
+same buffer.
+
+The variant `:quarkLs!` will instead list |b:term_title|s of all terminal buffers.
+
+
+==============================================================================
+BUGS								*quark-bugs*
+
+Bug fixes and feature requests are welcome at my public inbox: >
+
+	https://lists.sr.ht/~adigitoleo/public-inbox
+
+vim:tw=78:ts=8:noet:ft=help:norl:
