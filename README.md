@@ -1,5 +1,8 @@
 # ∴ quark.nvim
 
+> Sure he hasn't got much of a bark
+> And sure any he has it's all beside the mark.
+
 Fuzzy pickers to open files, switch buffers and execute ex-commands.
 Minimal configuration; tiny hackable source code.
 Ce n'est pas un [télescope](https://github.com/nvim-telescope/telescope.nvim).
