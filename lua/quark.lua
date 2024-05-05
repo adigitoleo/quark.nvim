@@ -8,7 +8,7 @@ local Quark = {}
 
 if system == "Windows_NT" then
     _lsep = [[`n]]
-    _printf = "pwsh.exe -c echo" -- Extra pwsh.exe nesting ensures laziness?
+    _printf = "echo"
 else
     _lsep = [[\n]]
     _printf = "printf"
@@ -110,20 +110,45 @@ local function delete_commands()
 end
 
 local function has_fzf()
-    local fzfver = vim.split(fn.systemlist("fzf --version")[1], ".", { plain = true, trimempty = false })
-    if #fzfver < 3 then
-        warn("cannot read fzf version. Make sure your fzf binary is installed correctly.")
+    local require_fzf_msg = "this plugin requires fzf (minimum version 0.51.0): <https://github.com/junegunn/fzf>"
+    local tmpfile = os.tmpname() -- The things we do for Windows...
+    local has_fzf_bin, _ = os.execute("fzf --version > " .. tmpfile)
+    if not has_fzf_bin then
+        warn(require_fzf_msg)
+        warn("cannot find fzf command. Make sure your fzf binary is installed correctly.")
+        os.remove(tmpfile)
+        return false
     end
-    return (
-        is_executable("fzf") and tonumber(fzfver[1], 10) >= 0 and tonumber(fzfver[2], 10) >= 51
-        and fn.exists("*fzf#run") and fn.exists("*fzf#wrap")
-    )
+    local fzfver = {}
+    for line in io.lines(tmpfile) do
+        fzfver = vim.split(line, ".", { plain = true, trimempty = false })
+        break
+    end
+    os.remove(tmpfile)
+    if #fzfver < 3 then
+        warn(require_fzf_msg)
+        warn("cannot read fzf version. Make sure your fzf binary is installed correctly.")
+        return false
+    end
+    if not is_executable("fzf") then
+        warn(require_fzf_msg)
+        warn("cannot execute fzf command. Make sure your fzf binary is installed correctly.")
+        return false
+    end
+    if (
+            tonumber(fzfver[1], 10) >= 0 and tonumber(fzfver[2], 10) >= 51
+            and fn.exists("*fzf#run") and fn.exists("*fzf#wrap")
+        ) then
+        return true
+    else
+        warn(require_fzf_msg)
+        return false
+    end
 end
 
 -- Setup function to allow and validate user configuration.
 function Quark.setup(config)
     if not has_fzf() then
-        warn("this plugin requires fzf: <https://github.com/junegunn/fzf>")
         return
     end
     for k, v in pairs(config) do
@@ -257,10 +282,7 @@ end
 
 -- Files in current or chosen directory.
 function Quark.fuzzy_find(opts)
-    if not has_fzf() then
-        warn("this plugin requires fzf: <https://github.com/junegunn/fzf>")
-        return
-    end
+    if not has_fzf() then return end
     local cmd = Quark.config.fzf.default_command
     if cmd == nil then
         cmd = os.getenv("FZF_DEFAULT_COMMAND")
@@ -271,10 +293,7 @@ end
 
 -- Recent files and vim.g.oldfiles.
 function Quark.fuzzy_recent()
-    if not has_fzf() then
-        warn("this plugin requires fzf: <https://github.com/junegunn/fzf>")
-        return
-    end
+    if not has_fzf() then return end
     local source = table.concat({
         _printf, ' "', list_files({ vim.v.oldfiles, list_buf_names(false) }, ":~:.", _lsep), '"'
     })
@@ -283,10 +302,7 @@ end
 
 -- vim.g.oldfiles and terminal buffers.
 function Quark.fuzzy_switch()
-    if not has_fzf() then
-        warn("this plugin requires fzf: <https://github.com/junegunn/fzf>")
-        return
-    end
+    if not has_fzf() then return end
     local files = list_files({ list_buf_names(false) }, ":~:.", _lsep)
     local terms = list_terminals(_lsep)
     local source = nil
@@ -306,10 +322,7 @@ end
 
 -- Fuzzy ex-command selection.
 function Quark.fuzzy_cmd()
-    if not has_fzf() then
-        warn("this plugin requires fzf: <https://github.com/junegunn/fzf>")
-        return
-    end
+    if not has_fzf() then return end
     local spec = {
         source = _printf .. ' "' .. list_commands(_lsep) .. '"',
         window = Quark.config.cmd_window,
