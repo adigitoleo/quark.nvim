@@ -8,7 +8,11 @@ local Quark = {}
 
 if system == "Windows_NT" then
     _lsep = [[`n]]
-    _printf = "echo"
+    if vim.o.shell == "pwsh.exe" or vim.o.shell == "pwsh" then
+        _printf = "pwsh.exe -c echo" -- Extra pwsh.exe nesting ensures laziness?
+    else
+        _printf = "echo"  -- Bare echo might prevent fuzzy_cmd from working.
+    end
 else
     _lsep = [[\n]]
     _printf = "printf"
