@@ -7,4 +7,5 @@ sources:
   - https://git.sr.ht/~adigitoleo/quark.nvim
 tasks:
   - test: |
+      cd quark.nvim
       nvim --headless -u test/init.lua
