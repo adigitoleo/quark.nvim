@@ -205,16 +205,6 @@ buffer or re-open a recent file (see |v:oldfiles|). A query can be used to
 fuzzy-match the buffer name. Switching to or opening the selected buffer is
 performed using the <Cr> (Enter) key.
 
-------------------------------------------------------------------------------
-								*:QuarkLs*
-
-Shows the current mapping of floating terminal titles to buffer numbers. The
-mapping may be many-to-one if the title for a floating terminal was updated.
-In this case, using either title with `:quarkTerm -t <title>` will restore the
-same buffer.
-
-The variant `:quarkLs!` will instead list |b:term_title|s of all terminal buffers.
-
 
 ==============================================================================
 BUGS								*quark-bugs*
