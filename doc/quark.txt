@@ -4,7 +4,7 @@
 		/ _` : :; / _' : '_! % /    X___/= \
 		\__. !\_._\__._:_: :_`.\   / ~ \___/
 		   :_:                 ``  \___/
-		
+
 		https://git.sr.ht/~adigitoleo/quark.nvim
 
 		Sure he hasn't got much of a bark
@@ -163,6 +163,10 @@ listed in the table below.
 	----------------------------------------------------------------------
 	`list_filetypes()`	return a list of currently defined filetypes
 	`list_syntax()`		return a list of currently loaded syntax files
+	`list_bufs(all?)`	return a list of buffers, including unlisted
+				but loaded buffers if the argument is `true`
+	`list_buf_names(all?)`	list `list_bufs`, but return buffer names
+				instead of buffer IDs
 	`fuzzy_find({*opts})`	implements `:QuarkFind`, {*opts} as per
 				|lua-guide-commands-create|
 	`fuzzy_recent()`	implements `:QuarkRecent`
@@ -202,7 +206,7 @@ fuzzy-match the buffer name. Switching to or opening the selected buffer is
 performed using the <Cr> (Enter) key.
 
 ------------------------------------------------------------------------------
-								*:quarkLs*
+								*:QuarkLs*
 
 Shows the current mapping of floating terminal titles to buffer numbers. The
 mapping may be many-to-one if the title for a floating terminal was updated.

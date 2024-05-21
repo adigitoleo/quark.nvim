@@ -242,31 +242,6 @@ local function list_commands(sep)
     return table.concat(cmdlist, sep)
 end
 
-function list_filetypes() -- List all known filetypes.
-    local filetypes = {}
-    for _, ft in pairs(fn.split(fn.expand("$VIMRUNTIME/ftplugin/*.vim"))) do
-        table.insert(filetypes, fn.fnamemodify(ft, ":t:r"))
-    end
-    return filetypes
-end
-
-function list_syntax() -- List all known syntax files.
-    local syntax = {}
-    for _, sx in pairs(fn.split(fn.expand("$VIMRUNTIME/syntax/*.vim"))) do
-        table.insert(syntax, fn.fnamemodify(sx, ":t:r"))
-    end
-    return syntax
-end
-
--- Get list of open ("listed", or "loaded" if all is true) buffer names.
-local function list_buf_names(all)
-    local buffer_names = {}
-    for _, buf in pairs(list_bufs(all)) do
-        table.insert(buffer_names, api.nvim_buf_get_name(buf))
-    end
-    return buffer_names
-end
-
 -- Generate spec for custom fuzzy finders.
 local function fzf_specgen(source, dir, prompt)
     local options = vim.deepcopy(Quark.config.fzf.extra_opts)
@@ -284,6 +259,48 @@ local function fzf_specgen(source, dir, prompt)
     }
 end
 
+function Quark.list_filetypes() -- List all known filetypes.
+    local filetypes = {}
+    for _, ft in pairs(fn.split(fn.expand("$VIMRUNTIME/ftplugin/*.vim"))) do
+        table.insert(filetypes, fn.fnamemodify(ft, ":t:r"))
+    end
+    return filetypes
+end
+
+function Quark.list_syntax() -- List all known syntax files.
+    local syntax = {}
+    for _, sx in pairs(fn.split(fn.expand("$VIMRUNTIME/syntax/*.vim"))) do
+        table.insert(syntax, fn.fnamemodify(sx, ":t:r"))
+    end
+    return syntax
+end
+
+-- Get list of open ("listed", or "loaded" if all is true) buffer IDs.
+function Quark.list_bufs(all)
+    local bufs = {}
+    for i, buf in ipairs(api.nvim_list_bufs()) do
+        if api.nvim_buf_is_loaded(buf) then
+            if all then
+                bufs[i] = buf
+            else
+                if vim.bo[buf].buflisted then
+                    table.insert(bufs, buf)
+                end
+            end
+        end
+    end
+    return bufs
+end
+
+-- Get list of open ("listed", or "loaded" if all is true) buffer names.
+function Quark.list_buf_names(all)
+    local buffer_names = {}
+    for _, buf in pairs(Quark.list_bufs(all)) do
+        table.insert(buffer_names, api.nvim_buf_get_name(buf))
+    end
+    return buffer_names
+end
+
 -- Files in current or chosen directory.
 function Quark.fuzzy_find(opts)
     if not has_fzf() then return end
@@ -299,7 +316,7 @@ end
 function Quark.fuzzy_recent()
     if not has_fzf() then return end
     local source = table.concat({
-        _printf, ' "', list_files({ vim.v.oldfiles, list_buf_names(false) }, ":~:.", _lsep), '"'
+        _printf, ' "', list_files({ vim.v.oldfiles, Quark.list_buf_names(false) }, ":~:.", _lsep), '"'
     })
     fn["fzf#run"](fn["fzf#wrap"](fzf_specgen(source, "", "Recent files: ")))
 end
@@ -307,7 +324,7 @@ end
 -- vim.g.oldfiles and terminal buffers.
 function Quark.fuzzy_switch()
     if not has_fzf() then return end
-    local files = list_files({ list_buf_names(false) }, ":~:.", _lsep)
+    local files = list_files({ Quark.list_buf_names(false) }, ":~:.", _lsep)
     local terms = list_terminals(_lsep)
     local source = nil
     if #files > 0 and #terms > 0 then
