@@ -1,6 +1,7 @@
 local failures = {}
 local testfiles = {
     "init-lazy.lua",
+    "init-pckr.lua",
 }
 for _, testfile in pairs(testfiles) do
     io.stdout:write(string.format("=> running test: %s\n", testfile))
