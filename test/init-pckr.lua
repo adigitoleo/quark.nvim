@@ -14,7 +14,7 @@ pkgbootstrap()
 require("pckr").add {
     "https://git.sr.ht/~adigitoleo/quark.nvim",
 }
-vim.cmd("Pckr update")
+vim.cmd { cmd = "Pckr", args = { "update" } }
 quark = common.load("quark")
 if quark then
     quark.setup {
