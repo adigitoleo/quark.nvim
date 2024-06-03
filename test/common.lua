@@ -1,4 +1,4 @@
-local Common
+local Common = {}
 local api = vim.api
 local bindkey = vim.keymap.set
 function Common.warn(msg) api.nvim_err_writeln(msg) end
