@@ -1,6 +1,6 @@
 local fn = vim.fn
 local opt = vim.opt
-common = require("common")
+common = require("test.common")
 
 local function pkgbootstrap()
     local pckr_path = fn.stdpath("data") .. "/site/pack/pckr/start/pckr.nvim"

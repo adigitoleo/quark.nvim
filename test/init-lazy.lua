@@ -1,6 +1,6 @@
 local opt = vim.opt
 local fn = vim.fn
-common = require("common")
+common = require("test.common")
 
 local function pkgbootstrap()
     local lazypath = fn.stdpath("data") .. "/lazy/lazy.nvim"
