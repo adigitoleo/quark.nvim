@@ -5,21 +5,25 @@ common = require("test.common")
 local function pkgbootstrap()
     local pckr_path = fn.stdpath("data") .. "/site/pack/pckr/start/pckr.nvim"
     if not (vim.uv or vim.loop).fs_stat(pckr_path) then
-        fn.system({ "git", "clone", "--depth", "1", "https://github.com/lewis6991/pckr.nvim", pckr_path })
+        -- pckr.nvim is less mature than lazy.nvim so we use git HEAD rather than a stable branch/tag.
+        fn.system { "git", "clone", "--depth", "1", "https://github.com/lewis6991/pckr.nvim", pckr_path }
     end
     opt.rtp:prepend(pckr_path)
 end
 
 pkgbootstrap()
 require("pckr").add {
-    { "https://git.sr.ht/~adigitoleo/quark.nvim", branch = "dev" },
-}
--- require("pckr.cli").run({ fargs = { "update" } })
-quark = common.load("quark")
-if quark then
-    quark.setup {
-        -- Requires ripgrep: <https://github.com/BurntSushi/ripgrep>
-        fzf = { default_command = "rg --files --hidden --no-messages" }
+    {
+        "https://git.sr.ht/~adigitoleo/quark.nvim",
+        branch = "dev",
+        config = function()
+            quark = common.load("quark")
+            if quark then
+                quark.setup {
+                    fzf = { default_command = "rg --files --hidden --no-messages" }
+                }
+                common.create_keybinds()
+            end
+        end
     }
-    common.create_keybinds()
-end
+}
