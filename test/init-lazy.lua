@@ -3,7 +3,7 @@ local fn = vim.fn
 common = require("test.common")
 
 local function pkgbootstrap()
-    local lazypath = fn.stdpath("data") .. "/lazy/lazy.nvim"
+    local lazypath = fn.stdpath("data") .. "/site/lazy/lazy.nvim"
     if not (vim.uv or vim.loop).fs_stat(lazypath) then
         fn.system({
             "git",
@@ -20,7 +20,8 @@ end
 pkgbootstrap()
 require("lazy").setup {
     {
-        url = 'https://github.com/adigitoleo/quark.nvim',
+        url = "https://git.sr.ht/~adigitoleo/quark.nvim",
+        branch = "dev",
         config = function()
             quark = common.load("quark")
             if quark then

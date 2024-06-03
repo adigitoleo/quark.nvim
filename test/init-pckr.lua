@@ -12,9 +12,9 @@ end
 
 pkgbootstrap()
 require("pckr").add {
-    "https://git.sr.ht/~adigitoleo/quark.nvim",
+    { "https://git.sr.ht/~adigitoleo/quark.nvim", branch = "dev" },
 }
-require("pckr.cli").run({ fargs = { "update" } })
+-- require("pckr.cli").run({ fargs = { "update" } })
 quark = common.load("quark")
 if quark then
     quark.setup {
