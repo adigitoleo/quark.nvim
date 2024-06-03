@@ -14,6 +14,8 @@ There is also an optional function which can be used to find and execute
 ex-commands. Recommended configuration:
 
 ```lua
+-- Requires fzf: <https://github.com/junegunn/fzf>
+-- You might need to load that URL using your NeoVim package manager.
 quark = require("quark").setup{
     -- Requires ripgrep: <https://github.com/BurntSushi/ripgrep>
     fzf = { default_command = "rg --files --hidden --no-messages" }
