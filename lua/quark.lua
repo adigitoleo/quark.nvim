@@ -3,7 +3,7 @@ local opt = vim.opt
 local fn = vim.fn
 local command = api.nvim_create_user_command
 local uncommand = api.nvim_del_user_command
-local system = vim.loop.os_uname().sysname
+local system = (vim.uv or vim.loop).os_uname().sysname
 local Quark = {}
 
 if system == "Windows_NT" then
