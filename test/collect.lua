@@ -10,6 +10,9 @@ function runtest(file, cmd, timeout)
     -- It should be less than the maximum timeout in test/run.lua.
     local job = vim.system(cmd, { timeout = timeout }):wait()
     if job.code == tests.TERMCODE or job.signal == tests.TERM then
+        if job.stderr ~= nil or job.stderr ~= "" then
+            tests.crit(job.stderr)
+        end
         tests.crit("reached the timeout for " .. file)
         return false
     elseif job.code ~= 0 then
