@@ -5,7 +5,7 @@ local lazydir = session.lazydir
 local lazypath = lazydir .. "lazy.nvim"
 
 opt.rtp:prepend(lazypath)
-opt.pp:prepend(session.lazydir)
+opt.pp:prepend(session.root .. "/site")
 local lazy = tests.load("lazy")
 if lazy ~= nil then
     vim.cmd.packadd { args = { "fzf" } }

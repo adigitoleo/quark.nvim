@@ -46,7 +46,7 @@ function Tests.create_session()
     local session = {
         root = "_testvar",
         module = "_testvar/fixtures.lua",
-        lazydir = "_testvar/site/lazy/",
+        lazydir = "_testvar/site/pack/lazy/opt/",
         lazylock = "_testvar/lazy-lock.json",
         pckr_path = "_testvar/site/pack/pckr/start/pckr.nvim",
         pckr_root = "_testvar/site/pack/",
