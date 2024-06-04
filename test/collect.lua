@@ -8,12 +8,12 @@ local tests = require("test.tests")
 function runtest(file, cmd, timeout)
     -- The timeout should be able to accomodate all of the vim.defer_fn() calls in the session.
     -- It should be less than the maximum timeout in test/run.lua.
-    local job = vim.system(cmd,
-        { timeout = timeout, stderr = function(_, data) if data ~= nil then tests.crit(data) end end }):wait()
+    local job = vim.system(cmd, { timeout = timeout }):wait()
     if job.code == tests.TERMCODE or job.signal == tests.TERM then
         tests.crit("reached the timeout for " .. file)
         return false
     elseif job.code ~= 0 then
+        tests.crit(job.stderr)
         return false
     end
     return true
