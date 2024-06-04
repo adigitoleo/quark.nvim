@@ -3,14 +3,27 @@ local api = vim.api
 local fn = vim.fn
 local uv = vim.uv or vim.loop
 local bindkey = vim.keymap.set
-function Tests.warn(msg) api.nvim_err_writeln(msg) end
+
+-- Check :h vim.system() for these.
+Tests.INT = 2
+Tests.TERM = 15
+Tests.TERMCODE = 124
+
+-- Send a message to neovim's error message buffer.
+function Tests.err(msg) api.nvim_err_writeln(msg) end
+
+-- Send a message to stderr and color it in red.
+function Tests.crit(msg) io.stderr:write(string.format("\27[31m%s\27[m\n", msg)) end
+
+-- Send a message to stdout and use boldface.
+function Tests.info(msg) io.stdout:write(string.format("\27[1m%s\27[m\n", msg)) end
 
 function Tests.load(plugin) -- Load either local or third-party plugin.
     local has_plugin, out = pcall(require, plugin)
     if has_plugin then
         return out
     else
-        Tests.warn(string.format("failed to load plugin '%s'", plugin))
+        Tests.err(string.format("failed to load plugin '%s'", plugin))
         return nil
     end
 end
@@ -26,7 +39,7 @@ end
 function Tests.create_session()
     local ok = uv.fs_mkdir("_testvar", tonumber("755", 8))
     if not ok then
-        -- Use io.stderr:write not Test.warn, because this will be called in collect.lua!
+        -- Use io.stderr:write not Test.err, because this will be called in collect.lua!
         io.stderr:write("failed to create temporary directory '_testvar' for test session\n")
         return
     end
@@ -55,7 +68,7 @@ function Tests.destroy_session()
     if fn.isdirectory("_testvar") ~= 0 then
         -- Here 0 == TRUE means the delete was successful.
         if fn.delete("_testvar", "rf") ~= 0 then
-            -- Use io.stderr:write not Test.warn, because this will be called in collect.lua!
+            -- Use io.stderr:write not Test.err, because this will be called in collect.lua!
             io.stderr:write("failed to remove '_testvar' directory\n")
         end
     end
@@ -71,7 +84,7 @@ end
 
 function Tests.check(expected, got)
     if not (got == expected) then
-        Tests.warn(string.format("Expected: %s\nGot: %s\n", expected, got))
+        Tests.err(string.format("Expected: %s\nGot: %s\n", expected, got))
         return false
     end
     return true

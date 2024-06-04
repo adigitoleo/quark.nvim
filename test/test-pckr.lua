@@ -18,7 +18,4 @@ if pckr ~= nil then
         tests.runtests(quark)
     end
 end
- -- The arg gives the max allowed time (ms) for these tests.
- -- It should be able to accomodate all of the vim.defer_fn() calls in this session.
- -- It should be less than the maximum timeout in test/run.lua.
-vim.defer_fn(function() os.exit(vim.g.ok) end, 3000)
+os.exit(vim.g.ok)
