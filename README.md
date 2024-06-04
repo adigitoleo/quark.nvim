@@ -43,3 +43,6 @@ can load packages if they are added to your 'packpath'.
 Available commands and options are described in `:help quark`.
 
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
+CI status of the `dev` branch:
+
+[![builds.sr.ht status](https://builds.sr.ht/~adigitoleo/quark.nvim.svg)](https://builds.sr.ht/~adigitoleo/quark.nvim?)
