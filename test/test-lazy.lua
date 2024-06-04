@@ -19,4 +19,4 @@ if lazy ~= nil then
         tests.runtests(quark)
     end
 end
-os.exit(vim.g.ok)
+vim.defer_fn(function() os.exit(vim.g.ok) end, 3000)

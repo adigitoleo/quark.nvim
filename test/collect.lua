@@ -1,31 +1,42 @@
 local failures = {}
-local testspec = { -- Each test consists of both a setup file and the main test file.
-    { "init-lazy.lua", "test-lazy.lua" },
-    { "init-pckr.lua", "test-pckr.lua" },
+local testspec = { -- Each test consists of a setup file, the main test file, and a timeout in ms.
+    { "init-lazy.lua", "test-lazy.lua", 10000 },
+    { "init-pckr.lua", "test-pckr.lua", 10000 },
 }
 local tests = require("test.tests")
 
-function runtest(file, cmd)
+function runtest(file, cmd, timeout)
     -- The timeout should be able to accomodate all of the vim.defer_fn() calls in the session.
     -- It should be less than the maximum timeout in test/run.lua.
-    local job = vim.system(cmd, { timeout = 3000 }):wait()
+    local job = vim.system(cmd,
+        { timeout = timeout, stderr = function(_, data) if data ~= nil then tests.crit(data) end end }):wait()
     if job.code == tests.TERMCODE or job.signal == tests.TERM then
         tests.crit("reached the timeout for " .. file)
+        return false
     elseif job.code ~= 0 then
-        tests.crit(job.stderr)
-        table.insert(failures, file)
+        return false
     end
+    return true
 end
 
 for _, spec in pairs(testspec) do
     initfile = spec[1]
     testfile = spec[2]
-    tests.info("=> running test: " .. testfile)
+    timeout = spec[3]
     session = tests.create_session()
     if session ~= nil then
+        local ok = false
         -- Here initfile installs the package manager and plugins, testfile runs the tests.
-        runtest(initfile, { "nvim", "--headless", "-n", "-u", "test/" .. initfile, "-c", "quit" })
-        runtest(testfile, { "nvim", "--headless", "-n", "-u", "test/" .. testfile })
+        tests.info("=> initialising test: " .. initfile)
+        ok = runtest(initfile, { "nvim", "--headless", "-n", "-u", "test/" .. initfile, "-c", "quit" }, timeout)
+        -- Only run tests if initialisation succeeded.
+        if ok then
+            tests.info("=> running test: " .. testfile)
+            ok = runtest(testfile, { "nvim", "--headless", "-n", "-u", "test/" .. testfile }, timeout)
+            if not ok then table.insert(failures, testfile) end
+        else
+            table.insert(failures, initfile)
+        end
         tests.destroy_session() -- Destroy session outside the actual test file to ensure cleanup.
     else
         os.exit(1)
