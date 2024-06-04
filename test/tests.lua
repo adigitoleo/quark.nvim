@@ -3,6 +3,14 @@ local api = vim.api
 local fn = vim.fn
 local uv = vim.uv or vim.loop
 local bindkey = vim.keymap.set
+vim.g.defer_time = 0
+
+-- Tests.wait_ok = function() return vim.g.ok end
+-- Tests.wait_got = function() return vim.g.got end
+
+local function addtime(dt)
+    vim.g.defer_time = vim.g.defer_time + dt
+end
 
 -- Check :h vim.system() for these.
 Tests.INT = 2
@@ -76,18 +84,28 @@ end
 
 function Tests.runtests(quark)
     vim.g.ok = false
+    vim.g.expected = nil
+    vim.g.got = nil
     vim.opt.showmode = false
-    vim.g.ok = Tests.find_cmd()
-    -- vim.g.ok = Tests.always_fail()
-    return vim.g.ok
+    Tests.find_cmd()
+    -- Tests.always_fail()
 end
 
-function Tests.check(expected, got)
-    if not (got == expected) then
-        Tests.err(string.format("Expected: %s\nGot: %s\n", expected, got))
-        return false
-    end
-    return true
+function Tests.check(expected, get_cb, pre_time, post_time)
+    addtime(pre_time)
+    vim.defer_fn(function()
+        vim.g.expected = expected
+        vim.g.got = get_cb()
+    end, vim.g.defer_time)
+    addtime(post_time)
+    vim.defer_fn(function()
+        if not (vim.g.got == vim.g.expected) then
+            Tests.err(string.format("Expected: %s\nGot: %s\n", vim.g.expected, vim.g.got))
+            vim.g.ok = false
+        else
+            vim.g.ok = true
+        end
+    end, vim.g.defer_time)
 end
 
 function Tests.typekeys(keys, special, mode)
@@ -100,36 +118,20 @@ function Tests.typekeys(keys, special, mode)
 end
 
 function Tests.find_cmd()
-    local defer_time = 0
     Tests.typekeys("<Cmd>", true)
     Tests.typekeys("QuarkFind test/\r")
     Tests.typekeys("tests.lua")
-    -- Wait for fzf results.
-    defer_time = defer_time + 500
+    addtime(500) -- Wait for fzf results.
     vim.defer_fn(function()
         Tests.typekeys("\r")
-    end, defer_time)
-    -- Wait until buffer loads.
-    defer_time = defer_time + 500
-    vim.g.expected = "test/tests.lua"
-    vim.defer_fn(function()
-        vim.g.got = fn.fnamemodify(api.nvim_buf_get_name(0), ":.")
-    end, defer_time)
-    -- Wait until globals are set.
-    defer_time = defer_time + 500
-    vim.defer_fn(function()
-        vim.g.ok = Tests.check(vim.g.expected, vim.g.got)
-    end, defer_time)
-    return vim.g.ok
+    end, vim.g.defer_time)
+    -- Check that the opened buffer has the correct name.
+    Tests.check("test/tests.lua", function() return fn.fnamemodify(api.nvim_buf_get_name(0), ":.") end, 500, 50)
 end
 
-function Tests.always_fail(defer_time)
+function Tests.always_fail()
     local msg = "this test is expected to fail"
-    vim.g.expected = msg
-    vim.defer_fn(function()
-        vim.g.got = vim.text.hexencode(msg)
-        vim.g.ok = Tests.check(vim.g.expected, vim.g.got)
-    end, defer_time or 500)
+    Tests.check(msg, function() return vim.text.hexencode(msg) end, 0, 50)
 end
 
 return Tests
