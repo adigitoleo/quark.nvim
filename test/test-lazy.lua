@@ -5,12 +5,19 @@ local lazydir = session.lazydir
 local lazypath = lazydir .. "lazy.nvim"
 
 opt.rtp:prepend(lazypath)
+opt.pp:prepend(session.root .. "/site")
 local lazy = tests.load("lazy")
 if lazy ~= nil then
     vim.cmd.packadd { args = { "fzf" } }
     vim.cmd.packadd { args = { "quark.nvim" } }
     local quark = tests.load("quark")
-    tests.runtests(quark)
+    if quark ~= nil then
+        quark.setup {
+            fzf = { default_command = "rg --files --hidden --no-messages" }
+        }
+        tests.create_keybinds(quark)
+        tests.runtests(quark)
+    end
 end
  -- The arg gives the max allowed time (ms) for these tests.
  -- It should be able to accomodate all of the vim.defer_fn() calls in this session.

@@ -22,7 +22,7 @@ if pckr ~= nil then
     }
     pckr.add {
         -- This shouldn't be needed on most Linux systems if the fzf package is installed.
-        -- { "https://github.com/junegunn/fzf", run = ":call fzf#install()" },
+        { "https://github.com/junegunn/fzf", run = ":call fzf#install()" },
         {
             "https://git.sr.ht/~adigitoleo/quark.nvim",
             branch = "dev",

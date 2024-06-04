@@ -26,7 +26,7 @@ if lazy ~= nil then
     lazy.setup(
         {
             -- This shouldn't be needed on most Linux systems if the fzf package is installed.
-            -- { url = "https://github.com/junegunn/fzf", build = ":call fzf#install()" },
+            { url = "https://github.com/junegunn/fzf", build = ":call fzf#install()" },
             {
                 url = "https://git.sr.ht/~adigitoleo/quark.nvim",
                 branch = "dev",

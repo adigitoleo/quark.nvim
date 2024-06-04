@@ -12,5 +12,5 @@ end
 uv.signal_start(signal, "sigint", function(_)
     die(1)
 end)
-local ok = os.execute("nvim -l test/collect.lua")
-if ok ~= 0 then die(1) else die(0) end
+local job = vim.system({ "nvim", "-l", "test/collect.lua" }, { timeout = 10000 }):wait()
+if job.code ~= 0 then die(1) else die(0) end

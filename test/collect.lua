@@ -38,6 +38,4 @@ if n_fails > 0 then
 else
     io.stdout:write("PASS\n")
 end
-vim.defer_fn(function()
-    os.exit(n_fails)
-end, 10000)
+os.exit(n_fails)
