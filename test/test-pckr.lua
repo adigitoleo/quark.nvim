@@ -18,4 +18,4 @@ if pckr ~= nil then
         tests.runtests(quark)
     end
 end
-vim.defer_fn(function() os.exit(vim.g.ok) end, 3000)
+vim.defer_fn(function() os.exit(vim.g.ok) end, vim.g.defer_time + 1000)
