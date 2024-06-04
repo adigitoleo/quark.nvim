@@ -16,6 +16,7 @@ ex-commands. Recommended configuration:
 ```lua
 -- Requires fzf: <https://github.com/junegunn/fzf>
 -- You might need to load that URL using your NeoVim package manager.
+-- The test suite contains some example setups for a few package managers.
 quark = require("quark").setup{
     -- Requires ripgrep: <https://github.com/BurntSushi/ripgrep>
     fzf = { default_command = "rg --files --hidden --no-messages" }

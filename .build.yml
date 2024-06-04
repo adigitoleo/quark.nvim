@@ -8,4 +8,4 @@ sources:
 tasks:
   - test: |
       cd quark.nvim
-      nvim --headless -u test/init.lua
+      nvim -l test/run.lua
