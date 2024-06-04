@@ -1,4 +1,4 @@
-image: fedora/rawhide
+image: archlinux
 packages:
   - neovim
   - ripgrep
@@ -8,4 +8,4 @@ sources:
 tasks:
   - test: |
       cd quark.nvim
-      nvim -l test/run.lua
+      false
