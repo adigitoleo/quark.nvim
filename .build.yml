@@ -3,9 +3,10 @@ packages:
   - neovim
   - ripgrep
   - fzf
+  - just
 sources:
   - https://git.sr.ht/~adigitoleo/quark.nvim
 tasks:
   - test: |
       cd quark.nvim
-      nvim -l test/run.lua
+      just test
