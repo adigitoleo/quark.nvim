@@ -10,8 +10,8 @@ local F = {
     border_choices = { "sharp", "rounded", "bold", "double", "block", "thinblock", "horizontal", "vertical", "top", "bottom", "left", "right", "none" },
     -- File previews using head(1) for text files.
     preview_opts = system == "Linux" and {
-        '--preview', 'case $(file {}) in *"text"*) head -200 ;; *) echo "Preview unavailable" ;; esac',
-        '--preview-window', vim.o.columns > 120 and 'right:60%:sharp' or 'down:60%:sharp'
+        '--preview', "'case $(file {}) in *\"text\"*) head -200 ;; *) echo \"Preview unavailable\" ;; esac'",
+        '--preview-window', vim.o.columns > 120 and "'right:60%:sharp'" or "'down:60%:sharp'"
     } or {},
     -- Mapping from generic window options to fzf options.
     window_opts_map = { width_frac = "width", height_frac = "height" }
@@ -74,7 +74,7 @@ end
 function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
     local options = ''
     if fzf.default_opts then
-        options = os.getenv("FZF_DEFAULT_OPTS") or ''
+        options = fn.split(os.getenv("FZF_DEFAULT_OPTS") or '')
     end
     local extra_opts = fzf.extra_opts
     if cmd then
@@ -83,10 +83,10 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
         for _, opt in pairs(F.preview_opts) do table.insert(extra_opts, opt) end
     end
     table.insert(extra_opts, '--prompt')
-    if prompt ~= nil then table.insert(extra_opts, prompt) else table.insert(extra_opts, dir .. ' ') end
+    if prompt ~= nil then table.insert(extra_opts, '"' .. prompt .. '"') else table.insert(extra_opts, dir .. ' ') end
     local _window = {}
     for k, v in pairs(window) do
-        if vim.tbl_contains(F.window_opts_map, k) then
+        if vim.tbl_contains(vim.tbl_keys(F.window_opts_map), k) then
             _window[F.window_opts_map[k]] = v
         else
             _window[k] = v
@@ -96,7 +96,7 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
         source = source,
         sink = 'e',
         dir = fn.substitute(fn.fnamemodify(dir, ':~'), '/*$', '/', ''),
-        options = options .. ' ' .. table.concat(extra_opts, ' '),
+        options = table.concat(vim.list_extend(options, extra_opts), ' '),
         window = _window,
     }
     if cmd then
@@ -119,7 +119,7 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
             end
         end
     end
-    return spec
+    return fn["fzf#wrap"](spec)
 end
 
 return F

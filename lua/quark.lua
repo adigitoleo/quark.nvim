@@ -33,8 +33,6 @@ Quark.config = {
         cmd_extra_opts = {
             '--no-multi',
             '--print-query',
-            '--prompt',
-            ':',
             '--color',
             'prompt:-1',
             '--expect',
