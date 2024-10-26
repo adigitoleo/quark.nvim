@@ -32,14 +32,22 @@ function TestInit()
             -- silent = true,
         },
     })
-    quark = require('quark').setup()
-    vim.cmd.helptags('ALL')
-    quark._err_blocking = true
-    vim.api.nvim_echo(
-        { { "Test suite setup completed for nvim instance with PID " }, { tostring(uv.os_getpid()) }, { "\n" } },
-        #vim.api.nvim_list_uis() ~= 0, -- show in :messages when not headless
-        { verbose = true }             -- hide in logging mode
-    )
+    quark = require('quark').setup { fzf = { default_command = "rg --files --hidden --no-messages" } }
+    if quark ~= nil then
+        vim.keymap.set("n", ";", quark.fuzzy_cmd, { desc = "Search for (and execute) ex-commands" })
+        vim.keymap.set("n", [[<Leader>b]], [[<Cmd>QuarkSwitch<Cr>]], { desc = "Launch buffer switcher" })
+        vim.keymap.set("n", [[<Leader>f]], [[<Cmd>QuarkFind<Cr>]], { desc = "Launch file browser" })
+        vim.keymap.set("n", [[<Leader>r]], [[<Cmd>QuarkRecent<Cr>]], { desc = "Launch recent file browser" })
+        vim.cmd.helptags('ALL')
+        quark._err_blocking = true
+        vim.api.nvim_echo(
+            { { "Test suite setup completed for nvim instance with PID " }, { tostring(uv.os_getpid()) }, { "\n" } },
+            #vim.api.nvim_list_uis() ~= 0, -- show in :messages when not headless
+            { verbose = true }             -- hide in logging mode
+        )
+    else
+        error("Failed test suite setup for nvim instance with PID " .. tostring(uv.os_getpid()))
+    end
 end
 
 if #vim.api.nvim_list_uis() == 0 then

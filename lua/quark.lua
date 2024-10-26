@@ -4,10 +4,13 @@ local api = vim.api
 local opt = vim.opt
 local fn = vim.fn
 local command = api.nvim_create_user_command
-local Quark = {}
+local Quark = {
+    cmd_actions = { "execute", "cancel", "add-space", "add-self-and-space" }
+}
 
 -- TODO: On fzf FileType, set a single-shot autocommand for WinClosed that redraws the statusline.
 -- TODO: Implement winblend using a FileType fzf autocommand.
+-- TODO: Implement xoffset and yoffset window options?
 
 Quark.config = {
     backend = "fzf",        -- "fzf" or "fzy_lua"
@@ -24,24 +27,29 @@ Quark.config = {
         border = "top",
         zindex = 23,
     },
+    -- additional actions for the ex-command picker
+    -- defaults: enter = 'execute' and 'ctrl-c' = 'cancel'
+    cmd_actions = {
+        space = 'add-space',
+        [';'] = 'cancel',
+        ['|'] = 'add-self-and-space',
+        ['!'] = 'add-self-and-space', -- 'fzf --expect !' requires fzf ≥ 0.51.0
+    },
     fzf = {
         preview = true,         -- show embedded file previews using head(1) on linux
         default_command = true, -- string or true: if true, use $FZF_DEFAULT_COMMAND
         default_opts = true,    -- string or true: if true, use $FZF_DEFAULT_OPTS
         bang_flags = {},        -- flags to append to default_command for :QuarkFind!
+        -- additional options passed to the fzf command for everything else
+        extra_opts = {},
         -- additional options passed to the fzf command for the ex-command picker
         cmd_extra_opts = {
             '--no-multi',
-            '--print-query',
             '--color',
             'prompt:-1',
-            '--expect',
-            ';,space|!', -- expect ! requires fzf ≥ 0.51.0
             '--layout',
             'reverse-list'
         },
-        -- additional options passed to the fzf command for everything else
-        extra_opts = {}
     }
     -- fzy_lua = {
     --     winblend = 30, -- transparency setting, see :h 'winblend'
@@ -72,7 +80,7 @@ local function validate(key, value, section)
     local numeric_window_keys = { "width_frac", "height_frac", "winblend", "zindex", "xoffset", "yoffset" }
     if section then
         option = table.concat({ section, key }, ".") .. " = " .. tostring(value)
-        if schema[section] == nil or schema[section][key] == nil then
+        if section ~= "cmd_actions" and (schema[section] == nil or schema[section][key] == nil) then
             warn("unrecognized option: " .. option)
             return nil
         elseif section == "window" or section == "cmd_window" then
@@ -86,6 +94,17 @@ local function validate(key, value, section)
                 warn("got '" .. option .. "', which is not a string")
                 return schema[section][key]
             end
+        elseif section == "cmd_actions" then
+            vim.print(value)
+            if type(key) ~= "string" or got_type ~= "string" then
+                warn("got '" .. option .. "', which is not a string => string mapping")
+                return
+            elseif not vim.list_contains(Quark.cmd_actions, value) then
+                vim.print(value)
+                warn("got '" .. option .. "', which is not one of: " .. table.concat(Quark.cmd_actions, ","))
+                return
+            end
+            return value
         elseif section == "fzf" then
             if (key == "default_command" or key == "default_opts") and not (got_type == "string" or value == true) then
                 warn("got '" .. option .. "', which is not a string or 'true'")
@@ -93,7 +112,7 @@ local function validate(key, value, section)
             elseif key == "preview" and got_type ~= "boolean" then
                 warn("got '" .. option .. "', which is not a boolean")
                 return schema[section][key]
-            elseif (key == "cmd_extra_opts" or key == "extra_opts") and got_type ~= "table" then
+            elseif (key == "bang_flags" or key == "cmd_extra_opts" or key == "extra_opts") and got_type ~= "table" then
                 warn("got '" .. option .. "', which is not a table ('list')")
                 return schema[section][key]
             end
@@ -113,7 +132,7 @@ local function validate(key, value, section)
 end
 
 -- Setup function to allow and validate user configuration.
----@param config table
+---@param config table|nil table
 function Quark.setup(config)
     if config ~= nil then
         if config.backend == "fzf" and not libfzf.has_fzf() then
@@ -286,7 +305,9 @@ function Quark.fuzzy_find(opts)
             cmdstr = tostring(cmd)
         end
         if (opts and opts.bang) then cmdstr = cmdstr .. ' ' .. table.concat(Quark.config.fzf.bang_flags, ' ') end
-        fn["fzf#run"](libfzf.specgen(Quark.config.fzf, Quark.config.window, cmdstr, false, dir))
+        local fzf = vim.deepcopy(Quark.config.fzf)
+        fzf.cmd_actions = Quark.config.cmd_actions
+        fn["fzf#run"](libfzf.specgen(fzf, Quark.config.window, cmdstr, false, dir))
     else
         warn("fzy_lua backend not implemented")
     end
@@ -300,7 +321,9 @@ function Quark.fuzzy_recent()
         local source = table.concat({
             printf, ' "', list_files({ vim.v.oldfiles, Quark.list_buf_names(false) }, ":~:.", sep), '"'
         })
-        fn["fzf#run"](libfzf.specgen(Quark.config.fzf, Quark.config.window, source, false, "", "Recent files: "))
+        local fzf = vim.deepcopy(Quark.config.fzf)
+        fzf.cmd_actions = Quark.config.cmd_actions
+        fn["fzf#run"](libfzf.specgen(fzf, Quark.config.window, source, false, "", "Recent files: "))
     else
         warn("fzy_lua backend not implemented")
     end
@@ -322,7 +345,9 @@ function Quark.fuzzy_switch()
             source = table.concat({ printf, ' "', terms, '"' })
         end
         if source ~= nil then
-            fn["fzf#run"](libfzf.specgen(Quark.config.fzf, Quark.config.window, source, false, "", "Open buffers: "))
+            local fzf = vim.deepcopy(Quark.config.fzf)
+            fzf.cmd_actions = Quark.config.cmd_actions
+            fn["fzf#run"](libfzf.specgen(fzf, Quark.config.window, source, false, "", "Open buffers: "))
         else
             warn("no buffers available")
         end
@@ -336,9 +361,11 @@ function Quark.fuzzy_cmd()
     if Quark.config.backend == "fzf" then
         if not libfzf.has_fzf() then return end
         local sep, printf = libfzf.get_sep_and_printf()
+        local fzf = vim.deepcopy(Quark.config.fzf)
+        fzf.cmd_actions = Quark.config.cmd_actions
         fn["fzf#run"](
             libfzf.specgen(
-                Quark.config.fzf, Quark.config.cmd_window, printf .. ' "' .. list_commands(sep) .. '"', false, "", ":"
+                fzf, Quark.config.cmd_window, printf .. ' "' .. list_commands(sep) .. '"', true, "", ":"
             )
         )
     else
