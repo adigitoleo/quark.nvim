@@ -56,7 +56,7 @@ function F.has_fzf()
     end
     if not (fn.exists("*fzf#run") and fn.exists("*fzf#wrap")) then
         require_fzf_msg = require_fzf_msg ..
-            "\ncannot find fzf#run and fzf#wrap functions. Make sure your fzf.vim is installed correctly."
+            "\ncannot find fzf#run and fzf#wrap functions. Make sure your fzf.vim plugin file is installed correctly."
     elseif tonumber(fzfver[1], 10) >= 0 and tonumber(fzfver[2], 10) >= 51 then
         return true
     else
@@ -135,7 +135,6 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
             end
         end
     end
-    vim.print(spec)
     return fn["fzf#wrap"](spec)
 end
 

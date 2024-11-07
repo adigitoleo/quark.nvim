@@ -23,7 +23,7 @@ Quark.config = {
     },
     cmd_window = {          -- same as above but for the fuzzy ex-command picker window
         width_frac = 1,
-        height_frac = 0.4,
+        height_frac = 0.4,  -- FIXME: Somehow this loooks more like 60% height??
         border = "top",
         zindex = 23,
     },
@@ -47,8 +47,6 @@ Quark.config = {
             '--no-multi',
             '--color',
             'prompt:-1',
-            '--layout',
-            'reverse-list'
         },
     }
     -- fzy_lua = {
@@ -95,12 +93,10 @@ local function validate(key, value, section)
                 return schema[section][key]
             end
         elseif section == "cmd_actions" then
-            vim.print(value)
             if type(key) ~= "string" or got_type ~= "string" then
                 warn("got '" .. option .. "', which is not a string => string mapping")
                 return
             elseif not vim.list_contains(Quark.cmd_actions, value) then
-                vim.print(value)
                 warn("got '" .. option .. "', which is not one of: " .. table.concat(Quark.cmd_actions, ","))
                 return
             end
