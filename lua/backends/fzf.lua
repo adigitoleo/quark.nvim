@@ -73,14 +73,18 @@ end
 ---@param prompt string|nil optional prompt message to display in front of the search query
 function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
     local options = {}
-    if fzf.default_opts then
+    if type(fzf.default_opts) == "string" then
+        options = fn.split(fzf.default_opts)
+    elseif fzf.default_opts then
         options = fn.split(os.getenv("FZF_DEFAULT_OPTS") or '')
     end
     local extra_opts = fzf.extra_opts
     if cmd then
         extra_opts = fzf.cmd_extra_opts
         table.insert(extra_opts, '--print-query')
-        if #fzf.cmd_actions > 0 then  -- Add '--expect' flag to fzf command with appropriate argument
+        -- Add '--expect' flag to fzf command with appropriate argument, if cmd_actions is not empty.
+        -- Don't use #table to check the size, it only works with list-like tables (numeric keys).
+        if next(fzf.cmd_actions) ~= nil then
             table.insert(extra_opts, '--expect')
             local keys = {}
             for k, _ in pairs(fzf.cmd_actions) do table.insert(keys, k) end
