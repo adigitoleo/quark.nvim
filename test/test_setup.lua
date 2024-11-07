@@ -97,18 +97,15 @@ end
 T['invalid-backend'] = new_set({ parametrize = { { 42 }, { "foo" } } })
 T['invalid-backend']['multi'] = function(x)
     err(
-        function() tc.lua('quark.setup { backend = ' .. x .. ' }') end,
+        function() tc.lua('quark.setup { backend = "' .. x .. '" }') end,
         "which is not one of"
     )
 end
 
-T['invalid-cmd-action'] = new_set({ parametrize = { { "foo" },  { "bar" } } })
+T['invalid-cmd-action'] = new_set({ parametrize = { { "foo" }, { "bar" } } })
 T['invalid-cmd-action']['multi'] = function(x)
-    -- FIXME: Broken test and maybe broken validation for this config section.
-    -- tc.lua('quark.setup { cmd_actions = { space = ' .. x .. ' } }')
-    -- vim.print(tc.lua_get('quark.config'))
     err(
-        function() tc.lua('quark.setup { cmd_actions = { space = ' .. x .. ' } }') end,
+        function() tc.lua('quark.setup { cmd_actions = { space = "' .. x .. '" } }') end,
         "which is not one of"
     )
 end
