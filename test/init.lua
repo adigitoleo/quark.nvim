@@ -1,6 +1,7 @@
 local uv = vim.uv
 local command = vim.api.nvim_create_user_command
 vim.opt.rtp:append(vim.fn.getcwd())
+vim.opt.rtp:append('/usr/share/vim/vimfiles/plugin/fzf.vim') -- Arch Linux doesn't provide this in /usr/share/neovim unlike Void 🤦
 
 local function handle_signal(signal)
     -- Clean up child instances.

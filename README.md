@@ -34,8 +34,13 @@ Pickers don't list the currently open buffer. I only have Win11 and Linux to
 test, so it might be broken on MacOS. Patches welcome.
 
 Supported fuzzy-finder backends:
-- [x] [fzf](https://github.com/junegunn/fzf)
+- [x] [fzf](https://github.com/junegunn/fzf)¹
 - [ ] [fzy-lua](https://github.com/swarn/fzy-lua)
+
+¹Strictly, only the `fzf.vim` file (base fzf vim plugin) is required.
+This file may not be installed by the `neovim` or `fzf` package for your Linux
+distribution. In that case, make sure to first install the `vim` package and
+add/copy the provided `fzf.vim` file into the neovim [`'runtimepath'`](https://neovim.io/doc/user/options.html#'runtimepath').
 
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
 can load packages if they are added to your 'packpath'.

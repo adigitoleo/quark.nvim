@@ -1,5 +1,6 @@
 image: archlinux
 packages:
+  - vim
   - neovim
   - ripgrep
   - fzf
@@ -8,5 +9,7 @@ sources:
   - https://git.sr.ht/~adigitoleo/quark.nvim
 tasks:
   - test: |
+      mkdir -p ~/.config/nvim/plugin
+      cp /usr/share/vim/vimfiles/plugin/fzf.vim ~/.config/nvim/plugin
       cd quark.nvim
       just test
