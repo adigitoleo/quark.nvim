@@ -1,7 +1,9 @@
 local uv = vim.uv
 local command = vim.api.nvim_create_user_command
 vim.opt.rtp:append(vim.fn.getcwd())
-vim.opt.rtp:append('/usr/share/vim/vimfiles/plugin/fzf.vim') -- Arch Linux doesn't provide this in /usr/share/neovim unlike Void 🤦
+-- Arch Linux doesn't provide fzf.vim in /usr/share/neovim unlike Void 🤦
+-- Install the vim package and copy that file to a local directory (~/.config/nvim/plugin) instead
+vim.opt.rtp:append('~/.config/nvim')
 
 local function handle_signal(signal)
     -- Clean up child instances.
@@ -33,14 +35,18 @@ function TestInit()
             -- silent = true,
         },
     })
-    quark = require('quark').setup { fzf = {
+    quark = require('quark').setup {
+        fzf = {
             -- Default fzf options based on my usual $FZF_DEFAULT_COMMAND and $FZF_DEFAULT_OPTS.
             default_command = "rg --files --hidden --no-messages",
-            default_opts = ('--multi --layout=reverse --marker="+" --bind backward-eof:abort,tab:down,shift-tab:up'
-            .. '--bind +:toggle-down,¶:abort,alt-\\;:abort,ctrl-l:clear-selection+first,alt-j:preview-down,alt-k:preview-up'
-            .. ' --color fg:12,bg:-1,hl:1,fg+:-1,bg+:-1,hl+:1,preview-fg:3'
-            .. ' --color prompt:2,gutter:-1,pointer:-1,marker:6,spinner:3,info:3'
-            .. ' --color border:12,header:12')
+            default_opts = table.concat(
+                {
+                    '--multi --marker="+" --bind backward-eof:abort,tab:down,shift-tab:up',
+                    '--bind +:toggle-down,¶:abort,alt-\\;:abort,ctrl-l:clear-selection+first,alt-j:preview-down,alt-k:preview-up',
+                    '--color fg:12,bg:-1,hl:1,fg+:-1,bg+:-1,hl+:1,preview-fg:3',
+                    '--color prompt:2,gutter:-1,pointer:-1,marker:6,spinner:3,info:3',
+                    '--color border:12,header:12'
+                }, ' ')
         }
     }
     if quark ~= nil then

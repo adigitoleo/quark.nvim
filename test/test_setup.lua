@@ -55,6 +55,7 @@ T['all-valid'] = function()
             },
             extra_opts = { '--no-multi' },
             cmd_extra_opts = { '--layout', 'reverse-list' },
+            bang_flags = { '--no-ignore-vcs' },
         }
     })
 end
@@ -66,6 +67,7 @@ T['unrecognized'] = new_set({
         { 'window = { foo = "double" }' },     -- valid section but unrecognized option
         { 'cmd_window = { foo = "double" }' }, -- valid section but unrecognized option
         { 'fzf = { foo = "double" }' },        -- valid section but unrecognized option
+        -- NOTE: Don't check the cmd_actions section, those options (keys) are valid until fzf tries to read them
     }
 })
 T['unrecognized']['multi'] = function(s)
@@ -81,10 +83,11 @@ T['invalid'] = new_set({
         { 'cmd_window = { width_frac = "foo" }',  type(defaults.cmd_window.width_frac) },
         { 'cmd_window = { height_frac = "foo" }', type(defaults.cmd_window.height_frac) },
         { 'cmd_window = { zindex = "foo" }',      type(defaults.cmd_window.zindex) },
-        { 'cmd_actions = { [42] = "execute" }',     "string" },
+        { 'cmd_actions = { [42] = "execute" }',   "string" },
         { 'fzf = { preview = "foo" }',            type(defaults.fzf.preview) },
         { 'fzf = { cmd_extra_opts = 42 }',        type(defaults.fzf.cmd_extra_opts) },
         { 'fzf = { extra_opts = 42 }',            type(defaults.fzf.extra_opts) },
+        { 'fzf = { bang_flags = 42 }',            type(defaults.fzf.bang_flags) },
     }
 })
 T['invalid']['multi'] = function(s, t)
