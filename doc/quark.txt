@@ -1,4 +1,4 @@
-*quark*	Fuzzy pickers to open files, switch buffers and execute ex-commands.
+*quark*	Fuzzy pickers to open files, switch buffers and execute ex-commands >
 				    _        ___
 		 __ _ _  _ __ _ _ _: :__    / & \__
 		/ _` : :; / _' : '_! % /    X___/= \
@@ -10,6 +10,8 @@
 		Sure he hasn't got much of a bark
 		And sure any he has it's all beside the mark.
 
+Type |gO| to see a table of contents.
+
 ==============================================================================
 INTRODUCTION						*quark-introduction*
 
@@ -19,15 +21,17 @@ re-open recently used files and buffers. Fuzzy search relies on a search
 backend (currently only `fzf(1)` is supported). The additional Lua function
 `fuzzy_cmd` may be used to set a key mapping that launches a fuzzy interface
 to |ex-command|s and |user-commands|. File/buffer/command pickers are all
-displayed in a floating window, see |api-floatwin|). The plugin requires NeoVim,
-and is know to work on versions 0.9.5+.
+displayed in a floating window (see |api-floatwin|) and omit the currently
+opened buffer. The plugin requires NeoVim, and is tested on the latest NeoVim
+available for Arch Linux:
+<https://archlinux.org/packages/extra/x86_64/neovim/>.
 
 Bug fixes and feature requests are welcome at my public inbox: >
 
 	https://lists.sr.ht/~adigitoleo/public-inbox
 
-Patches should be applicable to the `dev` branch. See |quark-bugs| for a
-list of current known issues that are most in need of attention.
+Patches should be applicable to the `dev` branch. See |quark-bugs| for a link
+to a unified issue tracker (search for issues preficed with '[quark.nvim]').
 
 
 ==============================================================================
@@ -35,16 +39,25 @@ USAGE								*quark-usage*
 
 Once the plugin files are on your 'packpath', load the plugin with >
 
-	:lua require('quark')
+	:lua require('quark').setup()
 
 in your `init.vim` file or simply >
 
-	require('quark')
+	require('quark').setup()
 
-in `init.lua`. Default options are applied automatically, but can be
-configured by passing a configuration table to the `setup` function, e.g. >
+in `init.lua`. Options can be configured by passing a table to `setup`, e.g. >
 
-	require('quark').setup{ window = { border = "rounded" } }
+	require('quark').setup{
+	    -- Requires fzf: <https://github.com/junegunn/fzf>
+	    backend = "fzf",
+	    fzf = {
+	        -- Requires ripgrep: <https://github.com/BurntSushi/ripgrep>
+                -- Alternatively, you can use find(1) on most Linux systems.
+	        default_command = "rg --files --hidden --no-messages"
+	        -- Allow opening multiple files and navigating the file preview.
+                default_opts = "--multi --bind alt-j:preview-down,alt-k:preview-up",
+	    }
+	}
 
 Configuration options are described in |quark-config|.
 
@@ -52,19 +65,30 @@ Configuration options are described in |quark-config|.
 ==============================================================================
 CONFIGURATION					*quark-config* *quark.setup*
 
-The following configuration options are supported for quark.
+This section describes the supported configuration options.
 Any omitted values will be set to their indicated defaults.
 
-Lua configuration example~
+Lua configuration example ~
 >
-	require('quark').setup{
-		window = {
-			width = 0.8,
-			height = 0.7,
-			border = "none",
-			preview = false,
-		},
+	quark = require('quark').setup {
+    	    fzf = {
+    	        default_command = "rg --files --hidden --no-messages",
+    	        default_opts = table.concat(
+    	            {
+    	                '--multi --marker="+" --bind backward-eof:abort,tab:down,shift-tab:up',
+    	                '--bind +:toggle-down,¶:abort,alt-\\;:abort,ctrl-l:clear-selection+first,alt-j:preview-down,alt-k:preview-up',
+    	                '--color fg:12,bg:-1,hl:1,fg+:-1,bg+:-1,hl+:1,preview-fg:3',
+    	                '--color prompt:2,gutter:-1,pointer:-1,marker:6,spinner:3,info:3',
+    	                '--color border:12,header:12'
+    	            }, ' ')
+    	    }
 	}
+
+------------------------------------------------------------------------------
+							*quark.setup.backend*
+
+This option controls the choice of backend for the fuzzy matching behaviour.
+Currently, only the default value (`"fzf"`) is valid.
 
 ------------------------------------------------------------------------------
 						*quark.setup.define_commands*
@@ -77,49 +101,53 @@ use alternative command names by manually passing the |quark-functions| to
 ------------------------------------------------------------------------------
 							*quark.setup.window*
 
-This option controls the appearance of the floating window. It is a table with
-the following keys
+This option controls the appearance of the floating window for fuzzy file
+pickers. It is a table with the following keys:
 
-	key~		value~		description~
+	key		value		description ~
 	----------------------------------------------------------------------
-	width		number		fraction of |'columns'| used for the
+	width_frac	number		fraction of |'columns'| used for the
 					floating window width (default: `0.9`)
 	----------------------------------------------------------------------
-	height		number		fraction of |'lines'| used for the
+	height_frac	number		fraction of |'lines'| used for the
 					floating window height (default: `0.6`)
 	----------------------------------------------------------------------
-	winblend	integer		note: not currently supported
-	----------------------------------------------------------------------
 	border		string		border style for the floating window
-					(default: `"sharp"`), see [1]
-	----------------------------------------------------------------------
-	highlight	string		name of highlight group to use for the
-					floating window (default: `NormalFloat`)
-	----------------------------------------------------------------------
-	preview		boolean		toggle file previews, using `head(1)`,
-					on linux (default: `true`)
+					(default: `"sharp"`)*
 	----------------------------------------------------------------------
 	zindex		integer		"priority" of the floating window,
-					see |api-win_config| (default: `11`)
+					see |api-win_config| (default: `21`)
+
+*Supported values depend on the selected backend. For the default backend
+(`"fzf"`), check the `fzf(1)` manual page.
 
 ------------------------------------------------------------------------------
 							*quark.setup.cmd_window*
 
-This option controls the appearance of the command window used by `fuzzy_cmd`.
-Options are identical to those in |quark.setup.window|, with the addition of
-`xoffset` (default: 0) and `yoffset` (default: 1) which are integer values
-that control the offset of the window relative to the editor. Default values
-for many fields are also different: >
+This option controls the appearance of the floating window used for the fuzzy
+command picker. Supported keys are identical to those in |quark.setup.window|.
+Default values are: `1`, `0.4`, `"top"`, `23`.
 
-	cmd_window = {
-		width = 1,
-		height = 0.4,
-		xoffset = 0,
-		yoffset = 1, -- start one line above the status messages
-		border = "top",
-		highlight = "StatusLine",
-		zindex = 23,
-	}
+------------------------------------------------------------------------------
+						*quark.setup.cmd_actions*
+
+This option controls the mapping of keys to supported actions within the fuzzy
+comand picker window. It is a table with the following keys:
+
+	key		default action		description ~
+	----------------------------------------------------------------------
+	space		`'add-space'`		chose selected match and
+						append a space on the |cmdline|
+        [';']		`'cancel'`		cancel fuzzy command picking
+        ['|']		`'add-self-and-space'`	chose selected match and
+						append a |bar| character (`|`)
+						followed by a space
+        ['!']		`'add-self-and-space'`	chose selected match and
+						append a |:command-bang|
+						character (`!`) and a space
+
+Supported actions are: `'execute', 'cancel', 'add-space', 'add-self-and-space'`.
+The `'execute'` action simply executes the selected match.
 
 ------------------------------------------------------------------------------
 							*quark.setup.fzf*
@@ -128,29 +156,27 @@ This option controls the settings used for the `fzf(1)` command, which
 implements the fuzzy searching. This option can be used to override the
 default fzf command (set using the `FZF_DEFAULT_COMMAND` environment variable
 by default) or change the behaviour of fzf. It is a table with the following
-default values: >
+default values:
 
-	fzf = {
-		default_command = nil, -- string or nil: if nil, use $FZF_DEFAULT_COMMAND
-		-- additional options passed to the fzf command for the ex-command picker
-		cmd_extra_opts = {
-			'--no-multi',
-			'--print-query',
-			'--prompt',
-			':',
-			'--color',
-			'prompt:-1',
-			'--expect',
-			';,space|!', -- expect ! requires fzf ≥ 0.51.0
-			'--layout',
-			'reverse-list'
-		},
-		-- additional options passed to the fzf command for everything else
-		extra_opts = vim.list_extend({ '--multi' },
-			system == "Linux" and
-			{ '--preview', 'case $(file {}) in *"text"*) head -200 {} ;; *) echo "Preview unavailable" ;; esac',
-			'--preview-window', vim.o.columns > 120 and 'right:60%:sharp' or 'down:60%:sharp' } or {})
-	}
+	key		value		description ~
+	----------------------------------------------------------------------
+	preview		boolean		toggle display of file previews using
+					`head(1)` on Linux
+	default_command	string | `true`	default command to use to generate the
+					list of files for the picker (uses the
+					value of `FZF_DEFAULT_COMMAND` if `true`)
+	default_opts	string | `true`	default options to use for the `fzf(1)
+					execution (uses the value of
+					`FZF_DEFAULT_OPTS` if `true`)
+	bang_flags	table		list of flags to append to the default
+					command if a |:command-bang| attribute
+					is present for the picker command
+	extra_opts	table		list of flags to append to the `fzf(1)`
+					command for all file pickers
+	cmd_extra_opts	table		list of flags to append to the `fzf(1)`
+					command for the |ex-command| &
+					|user-command| picker
+
 
 ==============================================================================
 FUNCTIONS					*quark-functions* *quark-api*
@@ -159,15 +185,15 @@ This plugin exposes a few functions via the `require("quark")` Lua namespace
 which can be used in custom command definitions or key bindings. They are
 listed in the table below.
 
-	function~		description~
+	function		description ~
 	----------------------------------------------------------------------
 	`list_filetypes()`	return a list of currently defined filetypes
 	`list_syntax()`		return a list of currently loaded syntax files
 	`list_bufs(all?)`	return a list of buffers, including unlisted
 				but loaded buffers if the argument is `true`
-	`list_buf_names(all?)`	list `list_bufs`, but return buffer names
+	`list_buf_names(all?)`	like `list_bufs`, but return buffer names
 				instead of buffer IDs
-	`fuzzy_find({*opts})`	implements `:QuarkFind`, {*opts} as per
+	`fuzzy_find({*opts}?)`	implements `:QuarkFind`, optional {*opts} as per
 				|lua-guide-commands-create|
 	`fuzzy_recent()`	implements `:QuarkRecent`
 	`fuzzy_switch()`	implements `:QuarkSwitch`
@@ -195,7 +221,7 @@ key.
 This command opens a floating window with a menu to select one or multiple
 files from the provided directory path, or from the current directory if the
 argument is omitted. A query can be used to fuzzy-match the file name.
-SOpening the selected files is performed using the <Cr> (Enter) key.
+Opening the selected files is performed using the <Cr> (Enter) key.
 
 ------------------------------------------------------------------------------
 								*:QuarkRecent*
@@ -209,8 +235,11 @@ performed using the <Cr> (Enter) key.
 ==============================================================================
 BUGS								*quark-bugs*
 
-Bug fixes and feature requests are welcome at my public inbox: >
+Please use my public inbox¹ to reach out with bug reports or send patches.
+Also check the task tracker² to discover current known bugs and requests,
+and relevant discussions about work-in-progress fixes or implementations.
 
-	https://lists.sr.ht/~adigitoleo/public-inbox
+1: <https://lists.sr.ht/~adigitoleo/public-inbox>
+2: <https://todo.sr.ht/~adigitoleo/nvim-plugins>
 
 vim:tw=78:ts=8:noet:ft=help:norl:
