@@ -8,7 +8,6 @@ local Quark = {
     cmd_actions = { "execute", "cancel", "add-space", "add-self-and-space" }
 }
 
--- TODO: On fzf FileType, set a single-shot autocommand for WinClosed that redraws the statusline.
 -- TODO: Implement winblend using a FileType fzf autocommand.
 -- TODO: Implement xoffset and yoffset window options?
 
@@ -165,6 +164,17 @@ function Quark.setup(config)
             api.nvim_del_user_command(cmd)
         end
     end
+
+    -- Explicit 'redrawstatus' after closing fzf popup windows is needed in some cases.
+    api.nvim_create_autocmd({ "FileType" }, {
+        pattern = "fzf",
+        once = true,
+        callback = function(_)
+            fn.luaeval(
+                'vim.api.nvim_create_autocmd({ "WinClosed" }, { buffer = vim.fn.bufnr(), command = "redrawstatus" })'
+            )
+        end
+    })
 
     return Quark
 end

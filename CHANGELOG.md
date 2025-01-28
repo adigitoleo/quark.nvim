@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Incorrect use of `fzf.default_opts` configuration option.
+- Statusline not being redrawn sometimes after closing the fzf popup window.
 
 ### Added
 
