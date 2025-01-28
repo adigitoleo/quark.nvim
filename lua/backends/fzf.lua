@@ -68,7 +68,7 @@ end
 ---@param fzf table fzf configuration table (see Quark.config.fzf)
 ---@param window table window configuration table (see Quark.config.window or Quark.config.cmd_window)
 ---@param source string command to run to generate list of entries for the fuzzy search
----@param cmd boolean toggle spec for ex-command picker
+---@param cmd boolean toggle spec generation for ex-command picker
 ---@param dir string directory in which to run the 'source' command
 ---@param prompt string|nil optional prompt message to display in front of the search query
 function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
@@ -109,6 +109,10 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
         else
             _window[k] = v
         end
+    end
+    if cmd then -- Anchor ex-cmd picker at bottom of window.
+        _window.relative = true
+        _window.yoffset = 1
     end
     -- Use 'e' (equivalent to 'edit') as the default sink.
     local spec = {

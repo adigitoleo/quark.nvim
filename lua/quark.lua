@@ -22,7 +22,7 @@ Quark.config = {
     },
     cmd_window = {          -- same as above but for the fuzzy ex-command picker window
         width_frac = 1,
-        height_frac = 0.4,  -- FIXME: Somehow this loooks more like 60% height??
+        height_frac = 0.4,
         border = "top",
         zindex = 23,
     },
