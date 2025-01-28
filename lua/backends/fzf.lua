@@ -110,8 +110,7 @@ function F.specgen(fzf, window, source, cmd, dir, prompt) ---@return table
             _window[k] = v
         end
     end
-    if cmd then -- Anchor ex-cmd picker at bottom of window.
-        _window.relative = true
+    if cmd then -- Anchor ex-cmd picker at bottom of screen.
         _window.yoffset = 1
     end
     -- Use 'e' (equivalent to 'edit') as the default sink.
