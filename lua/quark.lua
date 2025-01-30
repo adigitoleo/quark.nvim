@@ -164,18 +164,6 @@ function Quark.setup(config)
             api.nvim_del_user_command(cmd)
         end
     end
-
-    -- Explicit 'redrawstatus' after closing fzf popup windows is needed in some cases.
-    api.nvim_create_autocmd({ "FileType" }, {
-        pattern = "fzf",
-        once = true,
-        callback = function(_)
-            fn.luaeval(
-                'vim.api.nvim_create_autocmd({ "WinClosed" }, { buffer = vim.fn.bufnr(), command = "redrawstatus" })'
-            )
-        end
-    })
-
     return Quark
 end
 
