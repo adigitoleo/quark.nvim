@@ -127,22 +127,9 @@ local function validate(key, value, section)
 end
 
 -- Setup function to allow and validate user configuration.
----@param config table|nil table
+---@param config table|nil see :h quark-config
 function Quark.setup(config)
     if config ~= nil then
-        if config.backend == "fzf" and not libfzf.has_fzf() then
-            warn(
-                "unable to initialise fzf backend for fzf version ≥ 0.51.0," ..
-                " is your fzf executable installed correctly?"
-            )
-            return nil
-            -- elseif config.backend == "fzy_lua" and not libfzy.get_fzy() then
-            --     warn(
-            --         "unable to download fzy_lua backend from 'https://github.com/swarn/fzy-lua'," ..
-            --         " check your network connection"
-            --     )
-            --     return nil
-        end
         for k, v in pairs(config) do
             if type(v) == "table" then
                 for _k, _v in pairs(v) do
@@ -239,6 +226,19 @@ local function list_commands(sep) ---@return string
     return table.concat(cmdlist, sep)
 end
 
+-- Check health (initialisation status) of a fuzzy search backend.
+---@param backend table backend module
+local function ok(backend)
+    if backend.status == nil then
+        backend.init()
+    end
+    if backend.status ~= backend.ok then
+        warn(backend.status)
+        return false
+    end
+    return true
+end
+
 function Quark.list_filetypes() -- List all known filetypes.
     local filetypes = {}
     for _, ft in pairs(fn.split(fn.expand("$VIMRUNTIME/ftplugin/*.vim"))) do
@@ -286,7 +286,7 @@ function Quark.fuzzy_find(opts)
     local dir = '.'
     if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then dir = opts.fargs[1] end
     if Quark.config.backend == "fzf" then
-        if not libfzf.has_fzf() then return end
+        if not ok(libfzf) then return end
         local cmd = Quark.config.fzf.default_command
         local cmdstr = nil
         if cmd == true then
@@ -310,7 +310,7 @@ end
 -- Fuzzy-find recent files or switch to open buffers (excluding terminals).
 function Quark.fuzzy_recent()
     if Quark.config.backend == "fzf" then
-        if not libfzf.has_fzf() then return end
+        if not ok(libfzf) then return end
         local sep, printf = libfzf.get_sep_and_printf()
         local source = table.concat({
             printf, ' "', list_files({ vim.v.oldfiles, Quark.list_buf_names(false) }, ":~:.", sep), '"'
@@ -326,7 +326,7 @@ end
 -- Switch to fuzzy-matched open buffers (including terminals).
 function Quark.fuzzy_switch()
     if Quark.config.backend == "fzf" then
-        if not libfzf.has_fzf() then return end
+        if not ok(libfzf) then return end
         local sep, printf = libfzf.get_sep_and_printf()
         local files = list_files({ Quark.list_buf_names(false) }, ":~:.", sep)
         local terms = list_terminals(sep)
@@ -353,7 +353,7 @@ end
 -- Fuzzy ex-command selection.
 function Quark.fuzzy_cmd()
     if Quark.config.backend == "fzf" then
-        if not libfzf.has_fzf() then return end
+        if not ok(libfzf) then return end
         local sep, printf = libfzf.get_sep_and_printf()
         local fzf = vim.deepcopy(Quark.config.fzf)
         fzf.cmd_actions = Quark.config.cmd_actions

@@ -14,7 +14,11 @@ local F = {
         '--preview-window', vim.o.columns > 120 and "'right:60%:sharp'" or "'down:60%:sharp'"
     } or {},
     -- Mapping from generic window options to fzf options.
-    window_opts_map = { width_frac = "width", height_frac = "height" }
+    window_opts_map = { width_frac = "width", height_frac = "height" },
+    -- Cached health of external dependency (nil = not checked, F.ok = good, other string = bad).
+    status = nil,
+    -- String indicating correct dependency initialisation.
+    ok = "ok"
 }
 
 -- Get separator and printf command suitable for constructing fzf 'sources'.
@@ -33,15 +37,15 @@ function F.get_sep_and_printf()
 end
 
 -- Check for a supported version of `fzf` (executable) and `fzf.vim`.
-function F.has_fzf()
-    local require_fzf_msg = "this plugin requires fzf (minimum version 0.51.0): <https://github.com/junegunn/fzf>"
+function F.init()
+    local require_fzf_msg = "this plugin requires fzf (minimum version 0.51.0) <https://github.com/junegunn/fzf>."
     local tmpfile = os.tmpname() -- The things we do for Windows...
     local has_fzf_bin, _ = os.execute("fzf --version > " .. tmpfile)
     if not has_fzf_bin or not is_executable("fzf") then
         require_fzf_msg = require_fzf_msg ..
             "\ncannot find fzf command. Make sure your fzf binary is installed correctly."
         os.remove(tmpfile)
-        return false
+        F.status = require_fzf_msg
     end
     local fzfver = {}
     for line in io.lines(tmpfile) do
@@ -52,15 +56,16 @@ function F.has_fzf()
     if #fzfver < 3 then
         require_fzf_msg = require_fzf_msg ..
             "\ncannot read fzf version. Make sure your fzf binary is installed correctly."
-        return false
+        F.status = require_fzf_msg
     end
     if not (fn.exists("*fzf#run") and fn.exists("*fzf#wrap")) then
         require_fzf_msg = require_fzf_msg ..
             "\ncannot find fzf#run and fzf#wrap functions. Make sure your fzf.vim plugin file is installed correctly."
+        F.status = require_fzf_msg
     elseif tonumber(fzfver[1], 10) >= 0 and tonumber(fzfver[2], 10) >= 51 then
-        return true
+        F.status = F.ok
     else
-        return false
+        F.status = require_fzf_msg
     end
 end
 
