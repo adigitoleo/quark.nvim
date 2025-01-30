@@ -1,3 +1,6 @@
 [submodule "dep/mini.nvim"]
 	path = dep/mini.nvim
 	url = https://github.com/echasnovski/mini.nvim
+[submodule "dep/fzy-lua"]
+	path = dep/fzy-lua
+	url = https://github.com/swarn/fzy-lua

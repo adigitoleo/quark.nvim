@@ -9,8 +9,14 @@ test_file file: mini-nvim
 [private]
 mini-nvim:
     @echo "··· Downloading test suite dependencies ···"
-    test -d dep/mini.nvim/.git || git submodule update --init --recursive
+    test -d dep/mini.nvim/.git || git submodule update --init --recursive dep/mini.nvim
+
+[private]
+fzy-lua:
+    @echo "··· Downloading fzy-lua dependency ···"
+    test -d dep/fzy-lua/.git || git submodule update --init --recursive dep/fzy-lua
 
 clean:
     git submodule deinit -f dep/mini.nvim && rm -rf .git/modules/dep/mini.vim
+    git submodule deinit -f dep/fzy-lua && rm -rf .git/modules/dep/fzy-lua
     rm -rf doc/tags
